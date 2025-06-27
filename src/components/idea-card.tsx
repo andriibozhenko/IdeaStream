@@ -1,4 +1,3 @@
-
 "use client";
 
 import { formatDistanceToNow } from 'date-fns';
@@ -19,17 +18,17 @@ interface IdeaCardProps {
   idea: Idea;
   currentUser: UserProfile | null;
   deleteIdeaAction?: (id: string) => void;
-  addIdeaToMarketplaceAction?: (id: string) => void;
+  toggleMarketplaceAction?: (id: string, currentStatus: boolean) => void;
 }
 
 export function IdeaCard({ 
   idea, 
   currentUser, 
   deleteIdeaAction,
-  addIdeaToMarketplaceAction,
+  toggleMarketplaceAction,
 }: IdeaCardProps) {
   const isOwner = currentUser?.uid === idea.userId;
-  const canManage = isOwner && deleteIdeaAction && addIdeaToMarketplaceAction;
+  const canManage = isOwner && deleteIdeaAction && toggleMarketplaceAction;
 
   return (
     <Card className="w-full break-inside-avoid-column animate-in fade-in-50 duration-500">
@@ -57,12 +56,11 @@ export function IdeaCard({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem 
-                  onClick={() => addIdeaToMarketplaceAction(idea.id)} 
-                  disabled={idea.isMarketplace}
+                  onClick={() => toggleMarketplaceAction(idea.id, idea.isMarketplace)} 
                   className="cursor-pointer"
                 >
                   <Share className="mr-2 h-4 w-4" />
-                  <span>{idea.isMarketplace ? 'In Marketplace' : 'Add to Marketplace'}</span>
+                  <span>{idea.isMarketplace ? 'Remove from Marketplace' : 'Add to Marketplace'}</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem 
                   onClick={() => deleteIdeaAction(idea.id)} 
@@ -78,8 +76,8 @@ export function IdeaCard({
       </CardHeader>
       <CardContent>
         <p className="text-foreground/90">{idea.text}</p>
-        {idea.isMarketplace && !canManage && (
-            <Badge variant="secondary" className="mt-4">In Marketplace</Badge>
+        {idea.isMarketplace && (
+            <Badge variant="secondary" className="mt-4">On Marketplace</Badge>
         )}
       </CardContent>
     </Card>

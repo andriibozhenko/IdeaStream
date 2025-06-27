@@ -1,4 +1,3 @@
-
 "use client";
 
 import { IdeaCard } from "@/components/idea-card";
@@ -8,10 +7,10 @@ interface IdeaListProps {
   ideas: Idea[];
   currentUser: UserProfile | null;
   deleteIdeaAction?: (id: string) => void;
-  addIdeaToMarketplaceAction?: (id: string) => void;
+  toggleMarketplaceAction?: (id: string, currentStatus: boolean) => void;
 }
 
-export function IdeaList({ ideas, currentUser, deleteIdeaAction, addIdeaToMarketplaceAction }: IdeaListProps) {
+export function IdeaList({ ideas, currentUser, deleteIdeaAction, toggleMarketplaceAction }: IdeaListProps) {
   return (
     <div className="w-full column-1 md:columns-2 lg:columns-3 xl:columns-4 gap-4 space-y-4">
       {ideas.map((idea) => (
@@ -20,7 +19,7 @@ export function IdeaList({ ideas, currentUser, deleteIdeaAction, addIdeaToMarket
           idea={idea} 
           currentUser={currentUser} 
           deleteIdeaAction={deleteIdeaAction}
-          addIdeaToMarketplaceAction={addIdeaToMarketplaceAction} 
+          toggleMarketplaceAction={toggleMarketplaceAction} 
         />
       ))}
     </div>

@@ -1,10 +1,9 @@
-
 "use client";
 
 import Link from "next/link";
 import React from "react";
 import { usePathname } from "next/navigation";
-import { useAuth, signOutUser, deleteAccount } from "@/lib/hooks/use-auth";
+import { useAuth, signOutUser, deleteAccount } from "@/lib/hooks/use-auth-client";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -15,7 +14,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { LogIn, LogOut, PenSquare, UserX } from "lucide-react";
-import { isFirebaseConfigured } from "@/lib/firebase";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -59,8 +57,10 @@ export default function Header() {
   const handleSignOut = async () => {
     try {
       await signOutUser();
+      // This will now redirect to the login page as per the updated hook
     } catch (error) {
       console.error("Error signing out: ", error);
+      toast({ title: "Error", description: "Could not sign out.", variant: "destructive" });
     }
   };
 
@@ -72,7 +72,7 @@ export default function Header() {
         title: "Account Deleted",
         description: "Your account and all associated data have been permanently removed.",
       });
-      setIsDeleteDialogOpen(false);
+      // The auth hook will handle the redirect by updating the user state
     } catch (error: any) {
       toast({
         title: "Deletion Failed",
@@ -81,6 +81,7 @@ export default function Header() {
       });
     } finally {
       setIsDeleting(false);
+      setIsDeleteDialogOpen(false);
     }
   };
 
@@ -133,7 +134,7 @@ export default function Header() {
                 </DropdownMenu>
               ) : (
                 <Link href="/login" passHref>
-                  <Button disabled={!isFirebaseConfigured}>
+                  <Button>
                     <LogIn className="mr-2 h-4 w-4" />
                     Login
                   </Button>

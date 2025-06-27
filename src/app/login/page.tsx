@@ -7,28 +7,18 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ui/input"; // Still needed for Sign Up form
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  signInWithGoogle, 
-  signUpWithEmailAndPassword, 
-  signInWithEmailAndPassword 
-} from "@/lib/hooks/use-auth";
+import {
+  signInWithEmailAndPassword,
+  signUpWithEmailAndPassword,
+} from "@/lib/hooks/use-auth-client";
+import { auth } from "@/lib/firebase";
 import { PenSquare } from "lucide-react";
-import { isFirebaseConfigured } from "@/lib/firebase";
-import { FirebaseNotConfiguredNotice } from "@/components/firebase-not-configured-notice";
 
-const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg role="img" viewBox="0 0 24 24" {...props} xmlns="http://www.w3.org/2000/svg"><title>Google</title><path d="M12.48 10.92v3.28h7.84c-.24 1.84-.85 3.18-1.73 4.1-1.02 1.02-2.62 1.9-4.73 1.9-5.82 0-9.92-4.59-9.92-10.18s4.1-10.18 9.92-10.18c2.9 0 4.96 1.14 6.56 2.64l2.4-2.29C20.44 1.63 17.38 0 12.48 0 5.82 0 .25 5.42.25 12.08s5.57 12.08 12.23 12.08c3.23 0 5.74-1.04 7.64-2.93 2-1.94 2.62-4.82 2.62-8.32 0-.67-.06-1.22-.16-1.92h-9.9z"/></svg>
-);
-
-const loginSchema = z.object({
-  email: z.string().email({ message: "Please enter a valid email." }),
-  password: z.string().min(1, { message: "Password is required." }),
-});
-
+// Schema for the Sign Up form
 const signupSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
   email: z.string().email({ message: "Please enter a valid email." }),
@@ -39,65 +29,43 @@ export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [isLoginView, setIsLoginView] = useState(true);
+  const [isLoginView, setIsLoginView] = useState(true); // Default to Login view
 
-  const authUnavailable = !isFirebaseConfigured;
+  // State for the simple Login form
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [loginError, setLoginError] = useState("");
 
-  const loginForm = useForm<z.infer<typeof loginSchema>>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: { email: "", password: "" },
-  });
-
+  // State for the Sign Up form (using react-hook-form)
   const signupForm = useForm<z.infer<typeof signupSchema>>({
     resolver: zodResolver(signupSchema),
     defaultValues: { name: "", email: "", password: "" },
   });
 
-  const handleGoogleSignIn = async () => {
-    setIsGoogleLoading(true);
-    try {
-      await signInWithGoogle();
-      router.push('/');
-      toast({ title: "Success", description: "You are now logged in." });
-    } catch (error: any) {
-      console.error(error);
-      let errorMessage = "Failed to sign in with Google.";
-      if (error.code === "auth/popup-closed-by-user") {
-        errorMessage = "The sign-in window was closed before completing."
-      } else if (error.code === 'auth/configuration-not-found') {
-        errorMessage = "Google Sign-In is not enabled. Please enable it in your Firebase project's Authentication settings."
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      toast({ title: "Error", description: errorMessage, variant: "destructive" });
-    } finally {
-      setIsGoogleLoading(false);
-    }
-  };
-
-  const onLoginSubmit = async (values: z.infer<typeof loginSchema>) => {
+  // Handler for the Login form
+  const onLoginSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsLoading(true);
+    setLoginError("");
+
     try {
-      await signInWithEmailAndPassword(values.email, values.password);
+      await signInWithEmailAndPassword(auth, loginEmail, loginPassword);
       router.push('/');
       toast({ title: "Success", description: "You are now logged in." });
     } catch (error: any) {
-      console.error(error);
       let errorMessage = "An unknown error occurred.";
-      if (error.code === "auth/invalid-credential") {
-          errorMessage = "Invalid email or password. Please try again."
-      } else if (error.code === 'auth/configuration-not-found') {
-        errorMessage = "Email/Password Sign-In is not enabled. Please enable it in your Firebase project's Authentication settings."
-      } else if (error.message) {
+      if (error.code === "auth/invalid-credential" || error.code === "auth/wrong-password" || error.code === "auth/user-not-found") {
+        errorMessage = "Invalid email or password. Please try again."
+      } else {
         errorMessage = error.message;
       }
-      toast({ title: "Error", description: errorMessage, variant: "destructive" });
+      setLoginError(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Handler for the Sign Up form
   const onSignupSubmit = async (values: z.infer<typeof signupSchema>) => {
     setIsLoading(true);
     try {
@@ -105,13 +73,10 @@ export default function LoginPage() {
       router.push('/');
       toast({ title: "Success", description: "Your account has been created and you are logged in." });
     } catch (error: any) {
-      console.error(error);
       let errorMessage = "Could not create account.";
       if (error.code === "auth/email-already-in-use") {
         errorMessage = "This email is already in use. Please try logging in.";
-      } else if (error.code === 'auth/configuration-not-found') {
-        errorMessage = "Email/Password Sign-Up is not enabled. Please enable it in your Firebase project's Authentication settings.";
-      } else if (error.message) {
+      } else {
         errorMessage = error.message;
       }
       toast({ title: "Error", description: errorMessage, variant: "destructive" });
@@ -119,78 +84,73 @@ export default function LoginPage() {
       setIsLoading(false);
     }
   };
-  
-  const anyLoading = isLoading || isGoogleLoading;
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
-      <div className="absolute top-8 left-8">
-        <Link href="/" className="flex items-center gap-2 text-primary hover:underline">
-          <PenSquare className="h-6 w-6" />
-          <span className="text-2xl font-bold font-headline text-foreground">IdeaStream</span>
-        </Link>
-      </div>
-      <div className="w-full max-w-sm">
-        {authUnavailable && <FirebaseNotConfiguredNotice />}
-        <Card>
-          {isLoginView ? (
-            <Form {...loginForm}>
-              <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} key="login">
-                <CardHeader>
-                  <CardTitle>Welcome back</CardTitle>
-                  <CardDescription>Enter your credentials to access your account.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <FormField
-                    control={loginForm.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input placeholder="you@example.com" {...field} disabled={anyLoading || authUnavailable} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+    <div className="flex flex-col min-h-screen bg-background">
+      <header className="border-b">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <Link href="/" className="flex items-center space-x-2">
+            <PenSquare className="h-8 w-8 text-primary" />
+            <span className="text-2xl font-bold">IdeaStream</span>
+          </Link>
+        </div>
+      </header>
+      <main className="flex-1 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl">
+              {isLoginView ? "Welcome Back" : "Create Account"}
+            </CardTitle>
+            <CardDescription>
+              {isLoginView
+                ? "Sign in to your account to continue"
+                : "Create a new account to get started"
+              }
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoginView ? (
+              // --- SIMPLE LOGIN FORM using standard <input> ---
+              <form onSubmit={onLoginSubmit} className="space-y-4">
+                <div>
+                  <label className="block font-medium mb-1 text-sm">Email</label>
+                  <input
+                    type="email"
+                    placeholder="Enter your email"
+                    value={loginEmail}
+                    onChange={(e) => setLoginEmail(e.target.value)}
+                    disabled={isLoading}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   />
-                  <FormField
-                    control={loginForm.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Password</FormLabel>
-                        <FormControl>
-                          <Input type="password" placeholder="••••••••" {...field} disabled={anyLoading || authUnavailable} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                </div>
+                <div>
+                  <label className="block font-medium mb-1 text-sm">Password</label>
+                  <input
+                    type="password"
+                    placeholder="Enter your password"
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    disabled={isLoading}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   />
-                </CardContent>
-                <CardFooter>
-                  <Button type="submit" className="w-full" disabled={anyLoading || authUnavailable}>
-                    {isLoading ? "Signing in..." : "Sign In"}
-                  </Button>
-                </CardFooter>
+                </div>
+                {loginError && <p className="text-sm font-medium text-destructive">{loginError}</p>}
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? "Signing in..." : "Sign In"}
+                </Button>
               </form>
-            </Form>
-          ) : (
-            <Form {...signupForm}>
-               <form onSubmit={signupForm.handleSubmit(onSignupSubmit)} key="signup">
-                <CardHeader>
-                  <CardTitle>Create an account</CardTitle>
-                  <CardDescription>Enter your details below to get started.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
+            ) : (
+              // --- SIGN UP FORM (react-hook-form) ---
+              <Form {...signupForm}>
+                <form onSubmit={signupForm.handleSubmit(onSignupSubmit)} className="space-y-4">
                   <FormField
                     control={signupForm.control}
                     name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Name</FormLabel>
+                        <FormLabel>Full Name</FormLabel>
                         <FormControl>
-                          <Input placeholder="Your Name" {...field} disabled={anyLoading || authUnavailable} />
+                          <Input placeholder="Enter your full name" {...field} disabled={isLoading} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -203,7 +163,7 @@ export default function LoginPage() {
                       <FormItem>
                         <FormLabel>Email</FormLabel>
                         <FormControl>
-                          <Input placeholder="you@example.com" {...field} disabled={anyLoading || authUnavailable} />
+                          <Input placeholder="Enter your email" {...field} disabled={isLoading} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -216,53 +176,33 @@ export default function LoginPage() {
                       <FormItem>
                         <FormLabel>Password</FormLabel>
                         <FormControl>
-                          <Input type="password" placeholder="••••••••" {...field} disabled={anyLoading || authUnavailable} />
+                          <Input type="password" placeholder="Create a password" {...field} disabled={isLoading} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                </CardContent>
-                <CardFooter>
-                  <Button type="submit" className="w-full" disabled={anyLoading || authUnavailable}>
-                    {isLoading ? "Creating account..." : "Sign Up"}
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? "Creating account..." : "Create Account"}
                   </Button>
-                </CardFooter>
-               </form>
-            </Form>
-          )}
-        </Card>
-
-        <div className="mt-4 text-center text-sm">
-          <span className="text-muted-foreground">
-            {isLoginView ? "Don't have an account?" : "Already have an account?"}{' '}
-          </span>
-          <button 
-              onClick={() => setIsLoginView(!isLoginView)} 
-              disabled={anyLoading || authUnavailable}
-              className="font-semibold text-primary hover:underline focus:outline-none disabled:opacity-50"
+                </form>
+              </Form>
+            )}
+          </CardContent>
+          <CardFooter className="flex justify-center">
+            <Button
+              variant="link"
+              onClick={() => setIsLoginView(!isLoginView)}
+              className="text-sm"
             >
-              {isLoginView ? "Sign Up" : "Login"}
-          </button>
-        </div>
-
-        <div className="relative my-4">
-            <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
-            </div>
-        </div>
-        <Button 
-            variant="outline" 
-            className="w-full" 
-            onClick={handleGoogleSignIn} 
-            disabled={anyLoading || authUnavailable}>
-            <GoogleIcon className="mr-2 h-4 w-4" /> 
-            {isGoogleLoading ? "Redirecting..." : "Sign in with Google"}
-        </Button>
-      </div>
+              {isLoginView
+                ? "Don't have an account? Sign up"
+                : "Already have an account? Sign in"
+              }
+            </Button>
+          </CardFooter>
+        </Card>
+      </main>
     </div>
   );
 }

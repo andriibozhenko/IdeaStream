@@ -1,21 +1,23 @@
-import type { Timestamp } from 'firebase/firestore';
+// Local database types
+export interface User {
+  id: string;
+  email: string;
+  displayName: string;
+  photoURL?: string;
+  createdAt: string;
+}
 
-// The type as it is in Firestore
-export interface IdeaDocument {
+export interface Idea {
+  id: string;
   text: string;
   userId: string;
   userName: string;
-  userPhotoURL: string;
-  createdAt: Timestamp;
-  isMarketplace?: boolean;
+  userPhotoURL?: string;
+  createdAt: string;
+  isMarketplace: boolean;
 }
 
-// The type after being fetched and serialized for the client
-export interface Idea extends Omit<IdeaDocument, 'createdAt'> {
-  id: string;
-  createdAt: string; // ISO string
-}
-
+// Legacy type for backward compatibility
 export interface UserProfile {
   uid: string;
   email: string | null;

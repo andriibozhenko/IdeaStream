@@ -3,7 +3,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import type { UserProfile } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
@@ -13,11 +12,10 @@ const formSchema = z.object({
 });
 
 interface IdeaFormProps {
-  user: UserProfile;
-  postIdeaAction: (formData: { text: string }, user: UserProfile) => Promise<void>;
+  postIdeaAction: (formData: { text: string }) => Promise<void>;
 }
 
-export function IdeaForm({ user, postIdeaAction }: IdeaFormProps) {
+export function IdeaForm({ postIdeaAction }: IdeaFormProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -29,7 +27,7 @@ export function IdeaForm({ user, postIdeaAction }: IdeaFormProps) {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     // The parent component now handles closing the dialog and showing notifications
-    await postIdeaAction(values, user);
+    await postIdeaAction(values);
   }
 
   return (
