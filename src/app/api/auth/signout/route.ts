@@ -1,15 +1,13 @@
 import { NextResponse } from 'next/server';
 import { signOut } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST() {
   try {
     await signOut();
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('Sign out error:', error);
-    return NextResponse.json(
-      { error: 'Sign out failed' },
-      { status: 500 }
-    );
+    return NextResponse.json({ message: 'Signed out successfully' });
+  } catch (error: any) {
+    return NextResponse.json({ message: error.message }, { status: 500 });
   }
 } 

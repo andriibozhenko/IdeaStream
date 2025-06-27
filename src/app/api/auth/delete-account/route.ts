@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getCurrentUser, deleteAccount } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST() {
   try {
     const user = await getCurrentUser();

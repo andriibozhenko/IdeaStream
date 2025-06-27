@@ -3,6 +3,8 @@ import { signIn } from '@/lib/auth';
 
 const SESSION_COOKIE = 'ideastream-session';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const { email, password } = await request.json();
