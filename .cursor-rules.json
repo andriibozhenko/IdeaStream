@@ -1,0 +1,8 @@
+{
+  "rules": [
+    {
+      "rule": "Always read the `_planning` directory before responding.",
+      "glob": "_planning/**"
+    }
+  ]
+} 

@@ -1,3 +1,5 @@
+"use client";
+
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
@@ -13,7 +15,7 @@ const firebaseConfig = {
   appId: "1:897453024742:web:6d56a4106c718cdeb92227"
 };
 
-// Initialize Firebase
+// Client-side Firebase initialization
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);

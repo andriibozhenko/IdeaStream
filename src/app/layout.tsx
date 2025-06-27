@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
-import { AuthProvider } from '@/lib/hooks/use-auth-client';
 import { Toaster } from '@/components/ui/toaster';
+import { Providers } from '@/components/providers';
 import './globals.css';
 import { cn } from '@/lib/utils';
 
@@ -20,9 +20,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full">
       <body className={cn('h-full bg-background font-sans antialiased', inter.className)}>
-        <AuthProvider>
+        <Providers>
           {children}
-        </AuthProvider>
+        </Providers>
         <Toaster />
       </body>
     </html>

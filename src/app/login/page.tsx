@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   signInWithEmailAndPassword,
   signUpWithEmailAndPassword,
+  signInWithGoogle,
 } from "@/lib/hooks/use-auth-client";
 import { auth } from "@/lib/firebase";
 import { PenSquare } from "lucide-react";
@@ -41,6 +42,19 @@ export default function LoginPage() {
     resolver: zodResolver(signupSchema),
     defaultValues: { name: "", email: "", password: "" },
   });
+
+  const handleGoogleSignIn = async () => {
+    setIsLoading(true);
+    try {
+      await signInWithGoogle();
+      router.push('/');
+      toast({ title: "Success", description: "You are now logged in with Google." });
+    } catch (error: any) {
+      toast({ title: "Error", description: "Could not sign in with Google.", variant: "destructive" });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Handler for the Login form
   const onLoginSubmit = async (e: React.FormEvent) => {
@@ -133,10 +147,29 @@ export default function LoginPage() {
                     disabled={isLoading}
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   />
+                  <div className="flex items-center justify-end">
+                    <Button variant="link" asChild className="px-0 text-sm font-medium">
+                      <Link href="/forgot-password">Forgot Password?</Link>
+                    </Button>
+                  </div>
                 </div>
                 {loginError && <p className="text-sm font-medium text-destructive">{loginError}</p>}
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? "Signing in..." : "Sign In"}
+                </Button>
+                <div className="relative my-4">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-background px-2 text-muted-foreground">
+                      Or continue with
+                    </span>
+                  </div>
+                </div>
+                <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={isLoading}>
+                  {/* You can add a Google Icon here later */}
+                  Sign In with Google
                 </Button>
               </form>
             ) : (
@@ -184,6 +217,20 @@ export default function LoginPage() {
                   />
                   <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading ? "Creating account..." : "Create Account"}
+                  </Button>
+                  <div className="relative my-4">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-background px-2 text-muted-foreground">
+                        Or sign up with
+                      </span>
+                    </div>
+                  </div>
+                  <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={isLoading}>
+                    {/* You can add a Google Icon here later */}
+                    Sign Up with Google
                   </Button>
                 </form>
               </Form>
