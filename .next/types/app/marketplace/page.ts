@@ -1,4 +1,4 @@
-// File: /Users/macbook/Desktop/ IdeaStream/IdeaStream/src/app/marketplace/page.tsx
+// File: /Users/macbook/Desktop/IdeaStream/src/app/marketplace/page.tsx
 import * as entry from '../../../../src/app/marketplace/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

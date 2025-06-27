@@ -4,7 +4,7 @@ import { useAuth } from "@/lib/hooks/use-auth-client";
 import type { Idea } from "@/lib/types";
 import { IdeaList } from "@/components/idea-list";
 import { Lightbulb, Lock } from "lucide-react";
-import { Button } from "./ui/button";
+import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { collectionGroup, onSnapshot, query, where, orderBy, Timestamp } from "firebase/firestore";
